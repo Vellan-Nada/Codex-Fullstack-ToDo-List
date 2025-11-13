@@ -38,6 +38,7 @@ Copy `.env.example` to `.env` (Railway > Variables as well):
 - `SUPABASE_TASKS_TABLE` / `SUPABASE_PROFILES_TABLE` – override if you renamed tables
 - `STRIPE_SECRET_KEY` – backend secret key (starts with `sk_`)
 - `STRIPE_PRICE_ID` – recurring price ID for the premium plan
+- `STRIPE_WEBHOOK_SECRET` – signing secret from your Stripe webhook endpoint
 - `FRONTEND_URL` – allowed CORS origin + default success/cancel URLs
 - `FREE_PLAN_LIMIT` / `PREMIUM_PLAN_LIMIT` – enforce task counts server-side
 
@@ -59,7 +60,7 @@ The API listens on `http://localhost:4000` by default. Point the frontend's `VIT
 2. Create a new Railway service from the repository and set the environment variables listed above.
 3. Railway runs `npm install` automatically and executes `npm start` by default. Ensure the service's HTTP port matches `PORT` (4000).
 4. After deployment, Railway exposes a public URL (e.g., `https://taskforge-api.up.railway.app`). Use that value for `VITE_API_BASE_URL` on the frontend + Vercel.
-5. Configure Stripe webhooks (e.g., `/webhooks/stripe`) when you're ready to automate plan upgrades. Until then, call `/api/billing/plan` manually after verifying payments.
+5. Configure Stripe webhooks (POST `https://your-railway-domain/webhooks/stripe`) so successful checkouts automatically promote users to premium.
 
 ## Database expectations
 
@@ -89,4 +90,4 @@ Grant `service_role` full access; the API uses that key. RLS policies should per
 
 - Set `STRIPE_PRICE_ID` to the recurring price you configured in the Stripe dashboard.
 - `/api/billing/checkout` returns both `checkoutUrl` and `sessionId`. The frontend will prefer `checkoutUrl` (universal redirect) but can fall back to `stripe.redirectToCheckout`.
-- After Stripe confirms payment (webhook), call `upsertProfile(userId, { plan: 'premium' })`. There’s a placeholder `/api/billing/plan` route to help until webhooks are wired up.
+- Point a Stripe webhook endpoint at `POST https://your-railway-domain/webhooks/stripe` and use the revealing signing secret for `STRIPE_WEBHOOK_SECRET`. The webhook automatically upgrades/downgrades plans when a subscription is created, updated, or deleted. The manual `/api/billing/plan` route still exists for admin overrides.

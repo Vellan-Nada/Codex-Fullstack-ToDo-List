@@ -14,7 +14,8 @@ export const config = {
   },
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY,
-    priceId: process.env.STRIPE_PRICE_ID
+    priceId: process.env.STRIPE_PRICE_ID,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET
   },
   limits: {
     free: Number(process.env.FREE_PLAN_LIMIT || 4),

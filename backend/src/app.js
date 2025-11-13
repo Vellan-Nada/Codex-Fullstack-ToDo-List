@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import routes from './routes/index.js';
+import webhookRoutes from './routes/webhooks.js';
 import { config } from './config.js';
 
 const app = express();
@@ -14,9 +15,13 @@ app.use(
     credentials: true
   })
 );
+app.use(morgan(config.env === 'production' ? 'combined' : 'dev'));
+
+// Stripe webhooks need the raw body, so register before the JSON parser
+app.use('/webhooks', webhookRoutes);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan(config.env === 'production' ? 'combined' : 'dev'));
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
